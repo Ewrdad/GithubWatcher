@@ -10,21 +10,25 @@ import obje from "./stuff.json";
 
 function App() {
   const [events, setEvents] = useState([]);
+  const [interval, setInterval] = useState(5000);
   const listRef = useRef(null);
 
   const fetchEvents = async () => {
     const response = await fetch("https://api.github.com/events");
-    console.log(response);
+    console.info("New data requested: ",response);
     if (!response.ok) {
       throw new Error("Network response was not ok");
     }
+    if(response.headers.get("X-Poll-Interval") && response.headers.get("X-Poll-Interval")*1100 !== interval){  
+      setInterval(response.headers.get("X-Poll-Interval")*1100);
+      console.info("Interval set to: ", response.headers.get("X-Poll-Interval"));
+    }
     return response.json();
   };
-  console.log(obje);
   const { data, refetch, error } = useQuery({
     queryKey: ["githubEvents"],
     queryFn: fetchEvents,
-    refetchInterval: 5000, // Refetch every 10 seconds
+    refetchInterval: interval, // Refetch every 10 seconds
     enabled: true, // Start fetching immediately
     onError: (error) => {
       console.error("Error fetching events:", error);
